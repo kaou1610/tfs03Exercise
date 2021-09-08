@@ -3,19 +3,21 @@ package crawl
 import (
 	"database/sql"
 	"fmt"
-	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
-func ConnectDb() (*sql.DB, error) {
-	db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/testdb")
+func ConnectDb() (*gorm.DB, error) {
+	db, err := gorm.Open("mysql", "mphuong:16101999@tcp(127.0.0.1:3306)/movies")
 	if err != nil {
 		panic(err)
 	}
 	defer db.Close()
 	fmt.Println("Successful connection to database")
-	db.SetMaxOpenConns(20)
-	db.SetMaxIdleConns(20)
-	db.SetConnMaxLifetime(time.Minute * 5)
 
 	return db, nil
+}
+
+func InsertDB(db *sql.DB, name string, year string, rating string)  {
+	
 }

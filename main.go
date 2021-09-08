@@ -17,7 +17,6 @@ func main() {
 		log.Println(" Error: ", err)
 		return 
 	}
-	defer db.Close()
 
 	crawl.Crawler(db)
 }

@@ -1,10 +1,11 @@
 package crawl
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
+
 	"github.com/gocolly/colly"
+	"github.com/jinzhu/gorm"
 )
 
 type Movie struct {
@@ -15,7 +16,7 @@ type Movie struct {
 
 }
 
-func Crawler(db *sql.DB) {
+func Crawler(db *gorm.DB) {
 	// fName := "movie.csv"
 	// file, err := os.Create(fName)
 	// if err != nil {
@@ -24,13 +25,10 @@ func Crawler(db *sql.DB) {
 	// defer file.Close()
 	// writer := csv.NewWriter(file)
 	// defer writer.Flush()
-	c := colly.NewCollector(
-	//colly.AllowedDomains("https://www.imdb.com/"),
-	)
+	c := colly.NewCollector()
 
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Printf("Visiting: %s", r.URL)
-		fmt.Println()
 	})
 	c.OnError(func(r *colly.Response, e error) {
 		log.Println("Error: ", e)
@@ -38,22 +36,13 @@ func Crawler(db *sql.DB) {
 	c.OnResponse(func(r *colly.Response) {
 		fmt.Printf("Visited: %s", r.Request.URL)
 	})
-	fmt.Println()
 
 	c.OnHTML("tr", func(h *colly.HTMLElement) {
 		movie := Movie{}
 		movie.name = h.ChildText(".titleColumn > a")
 		movie.year = h.ChildText(".titleColumn .secondaryInfo")
 		movie.rate = h.ChildText(".ratingColumn > strong")
-		
-		stmt, err := db.Prepare("INSERT INTO movie (name,year,rate) values (?,?,?)")
-		handleError(err)
-		res, err1 := stmt.Exec(movie.name, movie.year, movie.rate)
-		handleError(err1)
-		_, err2 := res.LastInsertId()
-		if err != nil {
-			log.Fatal(err2)
-		}
+		db.Exec("INSERT movie SET name=?, year=?, rate=?", movie.name, movie.year, movie.rate) //error in here
 	})
 
 	c.OnScraped(func(r *colly.Response) {
@@ -68,3 +57,16 @@ func handleError(err error) {
 		panic(err)
 	}
 }
+
+// var db *gorm.DB
+// var err error
+
+// func dbConnection() (*gorm.DB, error)  {
+// 	db, err = gorm.Open("mysql", "mphuong:16101999@tcp(127.0.0.1:3306)/movies?charset=utf8&parseTime=True")
+//     if err != nil {
+//         log.Printf("Error %s when opening DBn", err)
+//         return nil, err
+//     }
+
+//     return db, nil
+// }
